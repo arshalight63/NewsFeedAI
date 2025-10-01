@@ -1,7 +1,8 @@
 streamlit
 requests
 beautifulsoup4
-lxml
+lxml[html_clean]==5.2.0
+lxml_html_clean
 newspaper3k
 transformers
 torch
