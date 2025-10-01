@@ -1,8 +1,21 @@
 # test_news.py
+import nltk
+from textblob import TextBlob
+
+# Ensure required corpora are present
+def ensure_textblob_corpora():
+    try:
+        _ = TextBlob("test").sentiment
+    except LookupError:
+        nltk.download("punkt")
+        nltk.download("averaged_perceptron_tagger")
+        nltk.download("wordnet")
+        nltk.download("brown")
+
+ensure_textblob_corpora()
 
 import requests
 from newspaper import Article
-from textblob import TextBlob
 
 def sentence_subjectivity(text, top_k=5):
     sentences = [s.strip() for s in TextBlob(text).sentences]
