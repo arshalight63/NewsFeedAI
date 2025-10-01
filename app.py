@@ -1,5 +1,19 @@
 import streamlit as st
-from test_news import (
+from test_news import sentence_subjectivity
+
+st.markdown("### 🎯 Biasometer")
+st.progress(int(subjectivity * 100))
+st.caption(f"Subjectivity score: {subjectivity:.2f}")
+
+with st.expander("ℹ️ How we arrived at this score from the link"):
+    st.write("""
+    1) We fetched the article via the URL and extracted the main text using newspaper3k.
+    2) We analyzed that text with TextBlob, which estimates how subjective the language is.
+    3) The Biasometer bar reflects the overall subjectivity (0 = objective, 1 = subjective).
+    """)
+    st.write("Top sentences contributing to subjectivity:")
+    for sent, subj in sentence_subjectivity(text, top_k=5):
+        st.markdown(f"- **Subjectivity:** {subj:.2f} — {sent}")
     fetch_dropsite_links,
     extract_article_text,
     summarize_text,
