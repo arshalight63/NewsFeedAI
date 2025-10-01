@@ -1,11 +1,17 @@
 -c constraints.txt
+
+# Core app
 streamlit==1.38.0
 requests==2.32.3
 beautifulsoup4==4.12.3
 lxml==4.9.3
 newspaper3k==0.2.8
-textblob==0.18.0
 feedparser==6.0.11
+
+# NLP / bias analysis
+textblob==0.18.0
+textblob-aptagger==0.3.2
+textblob-download==0.1.2
 
 # Hugging Face summarizer stack
 transformers==4.41.2
