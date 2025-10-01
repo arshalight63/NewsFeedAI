@@ -1,31 +1,66 @@
+# app.py
+
 import streamlit as st
-from test_news import fetch_dropsite_links, extract_article_text, summarize_text
+from test_news import (
+    fetch_dropsite_links,
+    extract_article_text,
+    summarize_text,
+    biasometer,
+)
 
-# --- Streamlit Page Setup ---
-st.set_page_config(page_title="DropSite AI News", layout="wide")
-st.title("📰 DropSite News — AI Summarized")
-st.caption("Headlines from DropSite News with neutral AI summaries.")
+# -----------------------------
+# Streamlit page config
+# -----------------------------
+st.set_page_config(
+    page_title="NewsFeed AI",
+    page_icon="📰",
+    layout="wide"
+)
 
-# Sidebar control
-limit = st.sidebar.slider("Number of headlines", 3, 15, 5)
+st.title("📰 NewsFeed AI")
+st.caption("Fetch, summarize, and analyze bias in news articles")
 
-# Fetch articles
-articles = fetch_dropsite_links(limit=limit)
+# -----------------------------
+# User input
+# -----------------------------
+url = st.text_input(
+    "Enter a news article URL",
+    placeholder="https://www.bbc.com/news/world-12345678"
+)
 
-# Render UI
-if not articles:
-    st.warning("⚠️ No articles found — check the selector or site structure.")
+if url:
+    with st.spinner("Fetching article..."):
+        try:
+            # Fetch links (for now just returns [url])
+            links = fetch_dropsite_links(url)
+
+            for link in links:
+                st.divider()
+                st.subheader(f"Article: {link}")
+
+                # Extract text
+                text = extract_article_text(link)
+
+                # Summarize
+                summary = summarize_text(text)
+
+                # Biasometer
+                subjectivity = biasometer(text)
+
+                # -----------------------------
+                # Display results
+                # -----------------------------
+                with st.expander("Full Article Text"):
+                    st.write(text)
+
+                st.markdown("### 📝 Summary")
+                st.write(summary)
+
+                st.markdown("### 🎯 Biasometer")
+                st.progress(int(subjectivity * 100))
+                st.caption(f"Subjectivity score: {subjectivity:.2f}")
+
+        except Exception as e:
+            st.error(f"Error processing article: {e}")
 else:
-    for art in articles:
-        with st.container():
-            st.markdown(f"### {art['title']}")
-            st.caption(f"🔗 {art['link']}")
-
-            # Extract and summarize
-            text = extract_article_text(art["link"])
-            summary = summarize_text(text)
-
-            st.write(summary)
-            st.link_button("Read full article", art["link"], use_container_width=True)
-
-        st.divider()
+    st.info("👆 Paste a news article URL above to get started.")
