@@ -3,6 +3,12 @@
 import requests
 from newspaper import Article
 from textblob import TextBlob
+
+def sentence_subjectivity(text, top_k=5):
+    sentences = [s.strip() for s in TextBlob(text).sentences]
+    scored = [(str(s), TextBlob(str(s)).sentiment.subjectivity) for s in sentences]
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return scored[:top_k]
 from transformers import pipeline
 import streamlit as st
 
