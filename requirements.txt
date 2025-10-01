@@ -1,7 +1,8 @@
 streamlit==1.38.0
 requests==2.32.3
 beautifulsoup4==4.12.3
-lxml==4.9.3
+lxml[html_clean]==5.2.2
+lxml_html_clean==0.1.1
 newspaper3k==0.2.8
 textblob==0.18.0
 feedparser==6.0.11
