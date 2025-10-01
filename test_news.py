@@ -1,74 +1,77 @@
-import streamlit as st
-from test_news import (
-    fetch_dropsite_links,
-    extract_article_text,
-    summarize_text,
-    biasometer,
-    sentence_subjectivity,
-)
-
-# ✅ This must be the first Streamlit command
-st.set_page_config(
-    page_title="NewsFeed AI",
-    page_icon="📰",
-    layout="wide"
-)
-
-st.title("📰 NewsFeed AI")
-st.caption("Fetch, summarize, and analyze bias in news articles")
+import nltk
+from textblob import TextBlob
+from newspaper import Article
+from transformers import pipeline
+import requests
 
 # -----------------------------
-# User input
+# Ensure TextBlob corpora
 # -----------------------------
-url = st.text_input(
-    "Enter a news article URL",
-    placeholder="https://www.bbc.com/news/world-12345678"
-)
+def ensure_textblob_corpora():
+    try:
+        _ = TextBlob("test").sentiment
+    except LookupError:
+        nltk.download("punkt")
+        nltk.download("averaged_perceptron_tagger")
+        nltk.download("wordnet")
+        nltk.download("brown")
 
-if url:
-    with st.spinner("Fetching article..."):
-        try:
-            # Fetch links (for now just returns [url])
-            links = fetch_dropsite_links(url)
+ensure_textblob_corpora()
 
-            for link in links:
-                st.divider()
-                st.subheader(f"Article: {link}")
+# -----------------------------
+# Summarizer loader (no Streamlit here)
+# -----------------------------
+_summarizer = None
 
-                # Extract text
-                text = extract_article_text(link)
+def load_summarizer():
+    global _summarizer
+    if _summarizer is None:
+        _summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+    return _summarizer
 
-                # Summarize
-                summary = summarize_text(text)
+# -----------------------------
+# Fetch article links
+# -----------------------------
+def fetch_dropsite_links(url, limit=5):
+    """For now, just return the given URL in a list."""
+    return [url]
 
-                # Biasometer
-                subjectivity = biasometer(text)
+# -----------------------------
+# Extract article text
+# -----------------------------
+def extract_article_text(url):
+    article = Article(url)
+    article.download()
+    article.parse()
+    return article.text
 
-                # -----------------------------
-                # Display results
-                # -----------------------------
-                with st.expander("Full Article Text"):
-                    st.write(text)
+# -----------------------------
+# Summarize text
+# -----------------------------
+def summarize_text(text, max_length=130, min_length=30):
+    if not text or len(text.split()) < 50:
+        return text  # too short to summarize
+    summarizer = load_summarizer()
+    summary = summarizer(
+        text,
+        max_length=max_length,
+        min_length=min_length,
+        do_sample=False
+    )
+    return summary[0]['summary_text']
 
-                st.markdown("### 📝 Summary")
-                st.write(summary)
+# -----------------------------
+# Biasometer (subjectivity)
+# -----------------------------
+def biasometer(text):
+    analysis = TextBlob(text)
+    return analysis.sentiment.subjectivity
 
-                st.markdown("### 🎯 Biasometer")
-                st.progress(int(subjectivity * 100))
-                st.caption(f"Subjectivity score: {subjectivity:.2f}")
-
-                # Explanation + top subjective sentences
-                with st.expander("ℹ️ How we arrived at this score from the link"):
-                    st.write("""
-                    1) We fetched the article via the URL and extracted the main text using newspaper3k.  
-                    2) We analyzed that text with TextBlob, which estimates how subjective the language is.  
-                    3) The Biasometer bar reflects the overall subjectivity (0 = objective, 1 = subjective).  
-                    """)
-                    st.write("Top sentences contributing to subjectivity:")
-                    for sent, subj in sentence_subjectivity(text, top_k=5):
-                        st.markdown(f"- **{subj:.2f}** — {sent}")
-
-        except Exception as e:
-            st.error(f"Error processing article: {e}")
-else:
-    st.info("👆 Paste a news article URL above to get started.")
+# -----------------------------
+# Sentence-level subjectivity
+# -----------------------------
+def sentence_subjectivity(text, top_k=5):
+    sentences = [str(s) for s in TextBlob(text).sentences]
+    scored = [(s, TextBlob(s).sentiment.subjectivity) for s in sentences]
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return scored[:top_k]
