@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from newspaper4k import Article
+from newspaper import Article
 from transformers import pipeline
 
 # --- AI Summarizer (smaller model to save space) ---
