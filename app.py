@@ -1,5 +1,3 @@
-# app.py
-
 import streamlit as st
 from test_news import (
     fetch_dropsite_links,
@@ -8,9 +6,7 @@ from test_news import (
     biasometer,
 )
 
-# -----------------------------
-# Streamlit page config
-# -----------------------------
+# ✅ This must be the first Streamlit command
 st.set_page_config(
     page_title="NewsFeed AI",
     page_icon="📰",
